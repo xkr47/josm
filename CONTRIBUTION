@@ -75,6 +75,10 @@ The XZ code (https://tukaani.org/xz/java.html)
 is from Lasse Collin and Igor Pavlov
 and license free Public Domain.
 
+The XMPCore code (https://www.adobe.com/devnet/xmp/library/eula-xmp-library-java.html)
+is from Adobe Systems Incorporated
+and licensed with BSD (see src/com/adobe/LICENSE.txt for full license).
+
 The Windows shortcut parsing code is from StackOverflow:
 - https://stackoverflow.com/a/9403438/2257172
 - https://github.com/codebling/WindowsShortcuts
