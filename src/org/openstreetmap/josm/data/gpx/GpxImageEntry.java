@@ -12,6 +12,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.tools.ExifReader;
 import org.openstreetmap.josm.tools.JosmRuntimeException;
 import org.openstreetmap.josm.tools.Logging;
+import org.openstreetmap.josm.tools.XmpReader;
 
 import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.lang.CompoundException;
@@ -21,6 +22,7 @@ import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.drew.metadata.jpeg.JpegDirectory;
+import com.drew.metadata.xmp.XmpDirectory;
 
 /**
  * Stores info about each image
@@ -511,6 +513,7 @@ public class GpxImageEntry implements Comparable<GpxImageEntry> {
         final Directory dir = metadata.getFirstDirectoryOfType(JpegDirectory.class);
         final Directory dirExif = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
         final GpsDirectory dirGps = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+        final XmpDirectory dirXmp = metadata.getFirstDirectoryOfType(XmpDirectory.class);
 
         try {
             if (dirExif != null) {
@@ -530,7 +533,7 @@ public class GpxImageEntry implements Comparable<GpxImageEntry> {
             Logging.debug(ex);
         }
 
-        if (dirGps == null) {
+        if (dirGps == null && dirXmp == null) {
             setExifCoor(null);
             setPos(null);
             return;
@@ -540,8 +543,26 @@ public class GpxImageEntry implements Comparable<GpxImageEntry> {
         ifNotNull(ExifReader.readElevation(dirGps), this::setElevation);
 
         try {
-            setExifCoor(ExifReader.readLatLon(dirGps));
-            setPos(getExifCoor());
+            LatLon xmpCoor = XmpReader.readLatLon(dirXmp);
+            LatLon exifCoor = ExifReader.readLatLon(dirGps);
+            LatLon bestCoor;
+            if (exifCoor == null) {
+                bestCoor = xmpCoor;
+            } else if (xmpCoor == null) {
+                bestCoor = exifCoor;
+            } else {
+                int exifLatZeroes = countTrailingZeroes(exifCoor.lat());
+                int exifLonZeroes = countTrailingZeroes(exifCoor.lon());
+                int xmpLatZeroes = countTrailingZeroes(xmpCoor.lat());
+                int xmpLonZeroes = countTrailingZeroes(xmpCoor.lon());
+                if (Math.min(exifLatZeroes, exifLonZeroes) < Math.min(xmpLatZeroes, xmpLonZeroes)) {
+                    bestCoor = exifCoor;
+                } else {
+                    bestCoor = xmpCoor;
+                }
+            }
+            setExifCoor(bestCoor);
+            setPos(bestCoor);
         } catch (MetadataException | IndexOutOfBoundsException ex) { // (other exceptions, e.g. #5271)
             Logging.error("Error reading EXIF from file: " + ex);
             setExifCoor(null);
@@ -554,7 +575,20 @@ public class GpxImageEntry implements Comparable<GpxImageEntry> {
             Logging.debug(ex);
         }
 
-        ifNotNull(dirGps.getGpsDate(), this::setExifGpsTime);
+        if (dirGps != null) {
+            ifNotNull(dirGps.getGpsDate(), this::setExifGpsTime);
+        }
+    }
+
+    private static int countTrailingZeroes(double v) {
+        long secondsTimes10000 = (long)(v * 36000000) + 100000000000L; // cm precision
+        char[] xs = Long.toString(secondsTimes10000).toCharArray();
+        for (int i=xs.length - 1 ; i >= 0; --i) {
+            if (xs[i] != '0') {
+                return xs.length - i - 1;
+            }
+        }
+        return Integer.MAX_VALUE;
     }
 
     private static <T> void ifNotNull(T value, Consumer<T> setter) {
