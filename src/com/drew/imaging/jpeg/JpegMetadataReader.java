@@ -45,7 +45,7 @@ import com.drew.metadata.jpeg.JpegDnlReader;
 import com.drew.metadata.jpeg.JpegReader;
 //import com.drew.metadata.photoshop.DuckyReader;
 //import com.drew.metadata.photoshop.PhotoshopReader;
-//import com.drew.metadata.xmp.XmpReader;
+import com.drew.metadata.xmp.XmpReader;
 
 /**
  * Obtains all available metadata from JPEG formatted files.
@@ -60,7 +60,7 @@ public class JpegMetadataReader
             //new JfifReader(),
             //new JfxxReader(),
             new ExifReader(),
-            //new XmpReader(),
+            new XmpReader(),
             //new IccReader(),
             //new PhotoshopReader(),
             //new DuckyReader(),

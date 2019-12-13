@@ -40,6 +40,7 @@ import com.drew.metadata.StringValue;
 import com.drew.metadata.exif.makernotes.*;
 import com.drew.metadata.iptc.IptcReader;
 import com.drew.metadata.tiff.DirectoryTiffHandler;
+import com.drew.metadata.xmp.XmpReader;
 
 /**
  * Implementation of {@link com.drew.imaging.tiff.TiffHandler} used for handling TIFF tags according to the Exif
@@ -212,6 +213,12 @@ public class ExifTiffHandler extends DirectoryTiffHandler
                 return true;
             }
             return false;
+        }
+
+        // Custom processing for embedded XMP data
+        if (tagId == ExifSubIFDDirectory.TAG_APPLICATION_NOTES && _currentDirectory instanceof ExifIFD0Directory) {
+            new XmpReader().extract(reader.getNullTerminatedBytes(tagOffset, byteCount), _metadata, _currentDirectory);
+            return true;
         }
 
         if (HandlePrintIM(_currentDirectory, tagId))
