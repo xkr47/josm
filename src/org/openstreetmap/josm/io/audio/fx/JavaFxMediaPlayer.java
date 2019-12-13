@@ -15,7 +15,7 @@ import org.openstreetmap.josm.io.audio.AudioPlayer.State;
 import org.openstreetmap.josm.io.audio.SoundPlayer;
 import org.openstreetmap.josm.tools.JosmRuntimeException;
 import org.openstreetmap.josm.tools.ListenerList;
-
+/*
 import com.sun.javafx.application.PlatformImpl;
 
 import javafx.scene.media.Media;
@@ -23,7 +23,7 @@ import javafx.scene.media.MediaException;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.util.Duration;
-
+*/
 /**
  * Default sound player based on the Java FX Media API.
  * Used on platforms where Java FX is available. It supports the following audio codecs:<ul>
@@ -40,7 +40,7 @@ public class JavaFxMediaPlayer implements SoundPlayer {
 
     private final ListenerList<AudioListener> listeners = ListenerList.create();
 
-    private MediaPlayer mediaPlayer;
+    //private MediaPlayer mediaPlayer;
 
     JavaFxMediaPlayer() {
         try {
@@ -58,7 +58,7 @@ public class JavaFxMediaPlayer implements SoundPlayer {
         final CountDownLatch startupLatch = new CountDownLatch(1);
 
         // Note, this method is called on the FX Application Thread
-        PlatformImpl.startup(startupLatch::countDown);
+        //PlatformImpl.startup(startupLatch::countDown);
 
         // Wait for FX platform to start
         startupLatch.await();
@@ -66,6 +66,7 @@ public class JavaFxMediaPlayer implements SoundPlayer {
 
     @Override
     public synchronized void play(Execute command, State stateChange, URL playingUrl) throws AudioException, IOException {
+        /*
         try {
             final URL url = command.url();
             if (playingUrl != url) {
@@ -92,10 +93,12 @@ public class JavaFxMediaPlayer implements SoundPlayer {
         } catch (MediaException | URISyntaxException e) {
             throw new AudioException(e);
         }
+        */
     }
 
     @Override
     public synchronized void pause(Execute command, State stateChange, URL playingUrl) throws AudioException, IOException {
+        /*
         if (mediaPlayer != null) {
             try {
                 mediaPlayer.pause();
@@ -103,6 +106,7 @@ public class JavaFxMediaPlayer implements SoundPlayer {
                 throw new AudioException(e);
             }
         }
+        */
     }
 
     @Override
@@ -113,12 +117,12 @@ public class JavaFxMediaPlayer implements SoundPlayer {
 
     @Override
     public synchronized double position() {
-        return mediaPlayer != null ? mediaPlayer.getCurrentTime().toSeconds() : -1;
+        return 0; // mediaPlayer != null ? mediaPlayer.getCurrentTime().toSeconds() : -1;
     }
 
     @Override
     public synchronized double speed() {
-        return mediaPlayer != null ? mediaPlayer.getCurrentRate() : -1;
+        return 0; // mediaPlayer != null ? mediaPlayer.getCurrentRate() : -1;
     }
 
     @Override

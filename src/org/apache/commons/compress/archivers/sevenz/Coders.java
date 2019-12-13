@@ -33,15 +33,7 @@ import java.util.zip.InflaterInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.compress.compressors.deflate64.Deflate64CompressorInputStream;
-import org.apache.commons.compress.utils.FlushShieldFilterOutputStream;
-import org.tukaani.xz.ARMOptions;
-import org.tukaani.xz.ARMThumbOptions;
 import org.tukaani.xz.FilterOptions;
-import org.tukaani.xz.FinishableWrapperOutputStream;
-import org.tukaani.xz.IA64Options;
-import org.tukaani.xz.PowerPCOptions;
-import org.tukaani.xz.SPARCOptions;
-import org.tukaani.xz.X86Options;
 
 class Coders {
     private static final Map<SevenZMethod, CoderBase> CODER_MAP = new HashMap<SevenZMethod, CoderBase>() {
@@ -49,18 +41,10 @@ class Coders {
         private static final long serialVersionUID = 1664829131806520867L;
     {
             put(SevenZMethod.COPY, new CopyDecoder());
-            put(SevenZMethod.LZMA, new LZMADecoder());
-            put(SevenZMethod.LZMA2, new LZMA2Decoder());
             put(SevenZMethod.DEFLATE, new DeflateDecoder());
             put(SevenZMethod.DEFLATE64, new Deflate64Decoder());
             put(SevenZMethod.BZIP2, new BZIP2Decoder());
             put(SevenZMethod.AES256SHA256, new AES256SHA256Decoder());
-            put(SevenZMethod.BCJ_X86_FILTER, new BCJDecoder(new X86Options()));
-            put(SevenZMethod.BCJ_PPC_FILTER, new BCJDecoder(new PowerPCOptions()));
-            put(SevenZMethod.BCJ_IA64_FILTER, new BCJDecoder(new IA64Options()));
-            put(SevenZMethod.BCJ_ARM_FILTER, new BCJDecoder(new ARMOptions()));
-            put(SevenZMethod.BCJ_ARM_THUMB_FILTER, new BCJDecoder(new ARMThumbOptions()));
-            put(SevenZMethod.BCJ_SPARC_FILTER, new BCJDecoder(new SPARCOptions()));
             put(SevenZMethod.DELTA_FILTER, new DeltaDecoder());
         }};
 
@@ -122,7 +106,7 @@ class Coders {
         @SuppressWarnings("resource")
         @Override
         OutputStream encode(final OutputStream out, final Object options) {
-            return new FlushShieldFilterOutputStream(opts.getOutputStream(new FinishableWrapperOutputStream(out)));
+            return null;
         }
     }
 

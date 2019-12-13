@@ -20,8 +20,6 @@ package org.apache.commons.jcs.admin;
  */
 
 import org.apache.commons.jcs.access.exception.CacheException;
-import org.apache.commons.jcs.auxiliary.remote.server.RemoteCacheServer;
-import org.apache.commons.jcs.auxiliary.remote.server.RemoteCacheServerFactory;
 import org.apache.commons.jcs.engine.CacheElementSerialized;
 import org.apache.commons.jcs.engine.behavior.ICacheElement;
 import org.apache.commons.jcs.engine.behavior.IElementAttributes;
@@ -274,39 +272,6 @@ public class JCSAdminBean implements JCSJMXBean
     @Override
     public void clearAllRegions() throws IOException
     {
-        if (RemoteCacheServerFactory.getRemoteCacheServer() == null)
-        {
-            // Not running in a remote cache server.
-            // Remove objects from the cache directly, as no need to broadcast removes to client machines...
-
-            String[] names = cacheHub.getCacheNames();
-
-            for (int i = 0; i < names.length; i++)
-            {
-                cacheHub.getCache(names[i]).removeAll();
-            }
-        }
-        else
-        {
-            // Running in a remote cache server.
-            // Remove objects via the RemoteCacheServer API, so that removes will be broadcast to client machines...
-            try
-            {
-                String[] cacheNames = cacheHub.getCacheNames();
-
-                // Call remoteCacheServer.removeAll(String) for each cacheName...
-                RemoteCacheServer<?, ?> remoteCacheServer = RemoteCacheServerFactory.getRemoteCacheServer();
-                for (int i = 0; i < cacheNames.length; i++)
-                {
-                    String cacheName = cacheNames[i];
-                    remoteCacheServer.removeAll(cacheName);
-                }
-            }
-            catch (IOException e)
-            {
-                throw new IllegalStateException("Failed to remove all elements from all cache regions: " + e, e);
-            }
-        }
     }
 
     /**
@@ -319,31 +284,6 @@ public class JCSAdminBean implements JCSJMXBean
     @Override
     public void clearRegion(String cacheName) throws IOException
     {
-        if (cacheName == null)
-        {
-            throw new IllegalArgumentException("The cache name specified was null.");
-        }
-        if (RemoteCacheServerFactory.getRemoteCacheServer() == null)
-        {
-            // Not running in a remote cache server.
-            // Remove objects from the cache directly, as no need to broadcast removes to client machines...
-            cacheHub.getCache(cacheName).removeAll();
-        }
-        else
-        {
-            // Running in a remote cache server.
-            // Remove objects via the RemoteCacheServer API, so that removes will be broadcast to client machines...
-            try
-            {
-                // Call remoteCacheServer.removeAll(String)...
-                RemoteCacheServer<?, ?> remoteCacheServer = RemoteCacheServerFactory.getRemoteCacheServer();
-                remoteCacheServer.removeAll(cacheName);
-            }
-            catch (IOException e)
-            {
-                throw new IllegalStateException("Failed to remove all elements from cache region [" + cacheName + "]: " + e, e);
-            }
-        }
     }
 
     /**
@@ -361,63 +301,5 @@ public class JCSAdminBean implements JCSJMXBean
     @Override
     public void removeItem(String cacheName, String key) throws IOException
     {
-        if (cacheName == null)
-        {
-            throw new IllegalArgumentException("The cache name specified was null.");
-        }
-        if (key == null)
-        {
-            throw new IllegalArgumentException("The key specified was null.");
-        }
-        if (RemoteCacheServerFactory.getRemoteCacheServer() == null)
-        {
-            // Not running in a remote cache server.
-            // Remove objects from the cache directly, as no need to broadcast removes to client machines...
-            cacheHub.getCache(cacheName).remove(key);
-        }
-        else
-        {
-            // Running in a remote cache server.
-            // Remove objects via the RemoteCacheServer API, so that removes will be broadcast to client machines...
-            try
-            {
-                Object keyToRemove = null;
-                CompositeCache<?, ?> cache = CompositeCacheManager.getInstance().getCache(cacheName);
-
-                // A String key was supplied, but to remove elements via the RemoteCacheServer API, we need the
-                // actual key object as stored in the cache (i.e. a Serializable object). To find the key in this form,
-                // we iterate through all keys stored in the memory cache until we find one whose toString matches
-                // the string supplied...
-                Set<?> allKeysInCache = cache.getMemoryCache().getKeySet();
-                for (Object keyInCache : allKeysInCache)
-                {
-                    if (keyInCache.toString().equals(key))
-                    {
-                        if (keyToRemove == null)
-                        {
-                            keyToRemove = keyInCache;
-                        }
-                        else
-                        {
-                            // A key matching the one specified was already found...
-                            throw new IllegalStateException("Unexpectedly found duplicate keys in the cache region matching the key specified.");
-                        }
-                    }
-                }
-                if (keyToRemove == null)
-                {
-                    throw new IllegalStateException("No match for this key could be found in the set of keys retrieved from the memory cache.");
-                }
-                // At this point, we have retrieved the matching K key.
-
-                // Call remoteCacheServer.remove(String, Serializable)...
-                RemoteCacheServer<Serializable, Serializable> remoteCacheServer = RemoteCacheServerFactory.getRemoteCacheServer();
-                remoteCacheServer.remove(cacheName, key);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalStateException("Failed to remove element with key [" + key + ", " + key.getClass() + "] from cache region [" + cacheName + "]: " + e, e);
-            }
-        }
     }
 }

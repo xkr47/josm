@@ -40,7 +40,6 @@ import org.apache.commons.jcs.admin.JCSAdminBean;
 import org.apache.commons.jcs.auxiliary.AuxiliaryCache;
 import org.apache.commons.jcs.auxiliary.AuxiliaryCacheAttributes;
 import org.apache.commons.jcs.auxiliary.AuxiliaryCacheFactory;
-import org.apache.commons.jcs.auxiliary.remote.behavior.IRemoteCacheConstants;
 import org.apache.commons.jcs.engine.CacheConstants;
 import org.apache.commons.jcs.engine.CompositeCacheAttributes;
 import org.apache.commons.jcs.engine.ElementAttributes;
@@ -70,7 +69,7 @@ import org.apache.commons.logging.LogFactory;
  * auxiliaries.
  */
 public class CompositeCacheManager
-    implements IRemoteCacheConstants, ICompositeCacheManager, IProvideScheduler
+    implements ICompositeCacheManager, IProvideScheduler
 {
     /** The logger */
     private static final Log log = LogFactory.getLog( CompositeCacheManager.class );
