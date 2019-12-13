@@ -34,10 +34,12 @@ import com.drew.metadata.exif.GpsDirectory;
 import com.drew.metadata.iptc.IptcDirectory;
 import com.drew.metadata.jpeg.JpegDirectory;
 import com.drew.metadata.xmp.XmpDirectory;
+import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.imagery.street_level.Projections;
 import org.openstreetmap.josm.tools.ExifReader;
 import org.openstreetmap.josm.tools.JosmRuntimeException;
 import org.openstreetmap.josm.tools.Logging;
+import org.openstreetmap.josm.tools.XmpReader;
 
 /**
  * Image utilities
@@ -148,6 +150,7 @@ public final class ImageUtils {
         final Directory dir = metadata.getFirstDirectoryOfType(JpegDirectory.class);
         final Directory dirExif = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
         final GpsDirectory dirGps = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+        final XmpDirectory dirXmp = metadata.getFirstDirectoryOfType(XmpDirectory.class);
 
         try {
             if (dirExif != null && dirExif.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
@@ -167,7 +170,7 @@ public final class ImageUtils {
             Logging.debug(ex);
         }
 
-        if (dirGps == null || dirGps.getTagCount() <= 1) {
+        if ((dirGps == null || dirGps.getTagCount() <= 1) && dirXmp == null) {
             image.setExifCoor(null);
             image.setPos(null);
             return;
@@ -177,8 +180,26 @@ public final class ImageUtils {
         ifNotNull(ExifReader.readElevation(dirGps), image::setElevation);
 
         try {
-            image.setExifCoor(ExifReader.readLatLon(dirGps));
-            image.setPos(image.getExifCoor());
+            LatLon xmpCoor = XmpReader.readLatLon(dirXmp);
+            LatLon exifCoor = ExifReader.readLatLon(dirGps);
+            LatLon bestCoor;
+            if (exifCoor == null) {
+                bestCoor = xmpCoor;
+            } else if (xmpCoor == null) {
+                bestCoor = exifCoor;
+            } else {
+                int exifLatZeroes = countTrailingZeroes(exifCoor.lat());
+                int exifLonZeroes = countTrailingZeroes(exifCoor.lon());
+                int xmpLatZeroes = countTrailingZeroes(xmpCoor.lat());
+                int xmpLonZeroes = countTrailingZeroes(xmpCoor.lon());
+                if (Math.min(exifLatZeroes, exifLonZeroes) < Math.min(xmpLatZeroes, xmpLonZeroes)) {
+                    bestCoor = exifCoor;
+                } else {
+                    bestCoor = xmpCoor;
+                }
+            }
+            image.setExifCoor(bestCoor);
+            image.setPos(bestCoor);
         } catch (MetadataException | IndexOutOfBoundsException ex) { // (other exceptions, e.g. #5271)
             Logging.error("Error reading EXIF from file: " + ex);
             image.setExifCoor(null);
@@ -191,7 +212,9 @@ public final class ImageUtils {
             Logging.debug(ex);
         }
 
-        ifNotNull(dirGps.getGpsDate(), d -> image.setExifGpsTime(d.toInstant()));
+        if (dirGps != null) {
+            ifNotNull(dirGps.getGpsDate(), d -> image.setExifGpsTime(d.toInstant()));
+        }
     }
 
     private static Metadata getMetadata(URI uri, InputStream inputStream) {
@@ -243,6 +266,17 @@ public final class ImageUtils {
         NoMetadataReaderWarning(String ext) {
             super("No metadata reader for format *." + ext);
         }
+    }
+
+    private static int countTrailingZeroes(double v) {
+        long secondsTimes10000 = (long)(v * 36000000) + 100000000000L; // cm precision
+        char[] xs = Long.toString(secondsTimes10000).toCharArray();
+        for (int i=xs.length - 1 ; i >= 0; --i) {
+            if (xs[i] != '0') {
+                return xs.length - i - 1;
+            }
+        }
+        return Integer.MAX_VALUE;
     }
 
     private static <T> void ifNotNull(T value, Consumer<T> setter) {
