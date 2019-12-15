@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="checkstyle">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/tools/checkstyle" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/tools/checkstyle/src" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/tools/checkstyle" recursive="false" />
+  </library>
+</component>
