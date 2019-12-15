@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="spotbugs">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/tools/spotbugs" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/tools/spotbugs" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/tools/spotbugs" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/tools/spotbugs" recursive="false" type="SOURCES" />
+  </library>
+</component>
