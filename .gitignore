@@ -14,3 +14,7 @@
 /resources/data/projection/
 /src/org/openstreetmap/josm/gui/mappaint/mapcss/parsergen/
 /tools/ivy/
+
+# LOCAL xkr47
+*.class
+/bin/
