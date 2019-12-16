@@ -1,0 +1,4 @@
+#!/bin/bash
+set -ex
+git fetch gh_upstream
+git rebase gh_upstream/mirror
