@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+if git fetch --all ; then
+    old=$(git rev-parse --verify HEAD)
+    git reset --hard @{u}
+    git merge --no-edit gh_upstream/master
+    ! git diff $old | grep -q . || ant clean dist
+fi
