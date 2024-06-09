@@ -450,6 +450,11 @@ public class UploadDialog extends AbstractUploadDialog implements PreferenceChan
         static String validateUploadTag(String uploadValue, String preferencePrefix,
                 List<String> defMandatory, List<String> defForbidden, List<String> defException) {
             String uploadValueLc = lower(uploadValue);
+            // Check whether value is mandatory
+            boolean mandatory = Config.getPref().getBoolean(preferencePrefix+".mandatory", false);
+            if (mandatory && uploadValueLc.trim().isEmpty()) {
+                return tr("The value must not be empty");
+            }
             // Check mandatory terms
             List<String> missingTerms = Config.getPref().getList(preferencePrefix+".mandatory-terms", defMandatory)
                 .stream().map(UploadAction::lower).filter(x -> !uploadValueLc.contains(x)).collect(Collectors.toList());

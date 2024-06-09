@@ -2,6 +2,7 @@
 package org.openstreetmap.josm.gui.io;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Arrays;
@@ -84,5 +85,43 @@ class UploadTextComponentValidatorTest {
         // A valid string should pass
         textField.setText("a string long enough with the mandatory term #myrequired #xyz");
         assertThat(feedback.getText(), containsString(expectedText));
+    }
+
+    static Stream<Arguments> testUploadWithMandatory() {
+        return Stream.of(Arguments.of("upload.comment.mandatory",
+                (BiFunction<JTextField, JLabel, ? extends UploadTextComponentValidator>)
+                    UploadTextComponentValidator.UploadCommentValidator::new),
+            Arguments.of("upload.source.mandatory",
+                (BiFunction<JTextField, JLabel, ? extends UploadTextComponentValidator>)
+                    UploadTextComponentValidator.UploadSourceValidator::new)
+        );
+    }
+
+    /**
+     * Unit test of {@link UploadTextComponentValidator.UploadCommentValidator} and
+     * {@link UploadTextComponentValidator.UploadSourceValidator} with mandatory value
+     */
+    @BasicPreferences
+    @ParameterizedTest
+    @MethodSource
+    void testUploadWithMandatory(String confPref,
+                                 BiFunction<JTextField, JLabel, ? extends UploadTextComponentValidator> validatorSupplier) {
+        Config.getPref().putBoolean(confPref, true);
+        JTextField textField = new JTextField("");
+        JLabel feedback = new JLabel();
+
+        validatorSupplier.apply(textField, feedback);
+
+        // Empty string should fail validation
+        textField.setText("");
+        assertThat(feedback.getText(), containsString("The value must not be empty"));
+
+        // Whitespace-only string should fail validation
+        textField.setText("   ");
+        assertThat(feedback.getText(), containsString("The value must not be empty"));
+
+        // Non-whitespace string should not fail validation
+        textField.setText("test");
+        assertThat(feedback.getText(), not(containsString("The value must not be empty")));
     }
 }
